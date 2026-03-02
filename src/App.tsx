@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload } from 'lucide-react';
+import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload, X } from 'lucide-react';
 
 type Alarm = {
   id: string;
@@ -254,6 +254,7 @@ export default function App() {
   const [newAlarmTime, setNewAlarmTime] = useState('07:00');
   const [newAlarmLabel, setNewAlarmLabel] = useState('Wake up');
   const [theme, setTheme] = useState<'auto' | 'dark' | 'light' | 'pure-black' | 'ps3-classic' | 'ps3-aurora' | 'ps3-crimson'>('auto');
+  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'contact' | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState(1.0);
   const [soundType, setSoundType] = useState('beep');
@@ -565,10 +566,11 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-1000 flex items-center justify-center p-4 sm:p-8 ${getBackgroundClass()}`}>
-      <div className="w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6">
-        
-        {/* Card 1: The Hero (Clock) */}
+    <div className={`min-h-screen transition-colors duration-1000 flex flex-col p-4 sm:p-8 ${getBackgroundClass()}`}>
+      <div className="w-full max-w-5xl mx-auto flex flex-col flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4 sm:mt-12">
+          
+          {/* Card 1: The Hero (Clock) */}
         <div className={`md:col-span-8 rounded-3xl p-8 sm:p-12 flex flex-col justify-center items-center relative overflow-hidden min-h-[400px] ${glassClass} ${ringingAlarm ? 'animate-pulse bg-red-500/20' : ''}`}>
           {ringingAlarm ? (
             <div className="flex flex-col items-center justify-center text-center z-10 w-full h-full">
@@ -810,6 +812,151 @@ export default function App() {
           </div>
           
         </div>
+        </div>
+        
+        {/* Content Sections */}
+        <div className="mt-24 max-w-4xl mx-auto space-y-16 pb-16 flex-1 w-full">
+          {/* User Guide Section */}
+          <section className={`rounded-3xl p-8 sm:p-12 ${glassClass}`}>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-6 tracking-tight">The Ultimate Guide to Using a Web-Based Alarm for Productivity</h2>
+            <div className="space-y-6 text-lg opacity-90 leading-relaxed">
+              <p>
+                In today's fast-paced digital environment, maintaining focus is more challenging than ever. A web-based alarm clock like Chrono Bento isn't just a tool for waking up; it's a powerful asset for structuring your day, managing your energy, and achieving deep work. Here is how you can leverage it for maximum productivity.
+              </p>
+              
+              <h3 className="text-xl font-bold mt-8 mb-4">1. The Power of the Browser-Based Alarm</h3>
+              <p>
+                Why use a web alarm instead of your phone? Your smartphone is a gateway to infinite distractions. Picking it up to set a timer often results in checking notifications, emails, or social media. By keeping your alarm in a browser tab, you eliminate the physical trigger of picking up your device. It stays in your peripheral vision, keeping you accountable without pulling you away from your workstation.
+              </p>
+
+              <h3 className="text-xl font-bold mt-8 mb-4">2. Timeboxing and the Pomodoro Technique</h3>
+              <p>
+                One of the most effective ways to use Chrono Bento is through timeboxing. Set an alarm for 25 to 50 minutes of uninterrupted focus, followed by a 5 to 10-minute break. This method, often referred to as the Pomodoro Technique, prevents burnout and maintains high cognitive function throughout the day. Use the scrolling interface to quickly set your next interval as soon as your break ends.
+              </p>
+
+              <h3 className="text-xl font-bold mt-8 mb-4">3. Customizing Your Environment</h3>
+              <p>
+                Your environment dictates your mindset. Chrono Bento offers ambient themes like 'Aurora' and 'Crimson' to match the mood of your work. A dark, pure-black theme might be perfect for late-night coding sessions, reducing eye strain, while a lighter theme might energize a morning writing sprint. Pair this with a custom alarm sound—perhaps a gentle chime instead of a jarring buzzer—to ensure you are brought out of your deep work state smoothly rather than abruptly.
+              </p>
+
+              <h3 className="text-xl font-bold mt-8 mb-4">4. Managing Multiple Alarms for Daily Routines</h3>
+              <p>
+                Don't just use alarms for tasks; use them to structure your entire day. Set a 'hard stop' alarm for the end of your workday to prevent overworking. Set a mid-day alarm to remind yourself to hydrate or stretch. By offloading these reminders to Chrono Bento, you free up mental bandwidth to focus entirely on the task at hand.
+              </p>
+
+              <h3 className="text-xl font-bold mt-8 mb-4">5. Best Practices for Reliability</h3>
+              <p>
+                To ensure your web alarm always goes off, keep the Chrono Bento tab open and active. Modern browsers sometimes throttle inactive tabs, but Chrono Bento is designed to request the necessary permissions to wake you up. Always test your volume levels using the built-in slider and preview button before starting a critical deep work session.
+              </p>
+              
+              <p className="font-medium mt-8 pt-6 border-t border-black/10 dark:border-white/10">
+                By integrating a dedicated web alarm into your daily workflow, you transform your browser from a source of distraction into a hub of focused productivity.
+              </p>
+            </div>
+          </section>
+
+          {/* About Us Section */}
+          <section className={`rounded-3xl p-8 sm:p-12 ${glassClass}`}>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-6 tracking-tight">About Us</h2>
+            <div className="space-y-6 text-lg opacity-90 leading-relaxed">
+              <p>
+                Chrono Bento was born out of a simple necessity: the need for focus in an increasingly distracted world. We noticed that traditional alarm apps and phone timers often lead to doom-scrolling or context switching. By bringing a beautiful, minimalist, and highly customizable alarm clock directly to your browser, Chrono Bento serves as a dedicated companion for deep work.
+              </p>
+              <p>
+                Whether you are using the Pomodoro technique, timing a study session, or just need a reliable wake-up call without reaching for your phone, our tool is designed to keep you in the zone. We believe that your tools should adapt to your environment, which is why we offer ambient themes and custom audio uploads, ensuring your workspace remains your sanctuary.
+              </p>
+            </div>
+          </section>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-auto py-8 border-t border-black/10 dark:border-white/10 text-center opacity-70 text-sm">
+          <div className="flex flex-wrap justify-center gap-6 mb-4">
+            <button onClick={() => setActiveModal('privacy')} className="hover:underline">Privacy Policy</button>
+            <button onClick={() => setActiveModal('terms')} className="hover:underline">Terms of Service</button>
+            <button onClick={() => setActiveModal('contact')} className="hover:underline">Contact Us</button>
+          </div>
+          <p>&copy; {new Date().getFullYear()} Chrono Bento. All rights reserved.</p>
+        </footer>
+
+        {/* Legal Modals */}
+        {activeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl p-8 shadow-2xl ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
+              <button 
+                onClick={() => setActiveModal(null)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                aria-label="Close modal"
+              >
+                <X size={24} />
+              </button>
+              
+              {activeModal === 'privacy' && (
+                <div className="space-y-6">
+                  <h2 className="font-display text-3xl font-bold mb-2">Privacy Policy</h2>
+                  <p className="opacity-70 text-sm mb-6">Last Updated: March 2026</p>
+                  
+                  <h3 className="text-xl font-bold">1. Introduction</h3>
+                  <p className="opacity-90">Welcome to Chrono Bento. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
+                  
+                  <h3 className="text-xl font-bold">2. The Data We Collect About You</h3>
+                  <p className="opacity-90">Chrono Bento is designed to be privacy-first. We do not require you to create an account. All your settings, including alarms, theme preferences, and custom audio files, are stored locally on your device using your browser's LocalStorage and IndexedDB. We do not transmit this data to our servers.</p>
+                  
+                  <h3 className="text-xl font-bold">3. How We Use Your Data</h3>
+                  <p className="opacity-90">Because your data remains on your device, we do not process, analyze, or share your personal data with any third parties. Your custom audio files are processed entirely within your browser for the sole purpose of playing your alarm.</p>
+                  
+                  <h3 className="text-xl font-bold">4. Cookies and Local Storage</h3>
+                  <p className="opacity-90">We use LocalStorage to remember your preferences (e.g., 12/24 hour format, active theme, volume). This is strictly necessary for the application to function as intended. We do not use tracking cookies or third-party analytics.</p>
+                  
+                  <h3 className="text-xl font-bold">5. Your Legal Rights</h3>
+                  <p className="opacity-90">Under the GDPR, you have rights including the right to access, correct, erase, and restrict the processing of your personal data. Since we do not store your data on our servers, you can exercise your right to erasure simply by clearing your browser's site data for this website.</p>
+                  
+                  <h3 className="text-xl font-bold">6. Contact Us</h3>
+                  <p className="opacity-90">If you have any questions about this privacy policy or our privacy practices, please contact us via the Contact page.</p>
+                </div>
+              )}
+
+              {activeModal === 'terms' && (
+                <div className="space-y-6">
+                  <h2 className="font-display text-3xl font-bold mb-2">Terms of Service</h2>
+                  <p className="opacity-70 text-sm mb-6">Last Updated: March 2026</p>
+                  
+                  <h3 className="text-xl font-bold">1. Acceptance of Terms</h3>
+                  <p className="opacity-90">By accessing and using Chrono Bento, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                  
+                  <h3 className="text-xl font-bold">2. Description of Service</h3>
+                  <p className="opacity-90">Chrono Bento provides a web-based alarm clock and productivity tool. The service is provided "as is" and "as available" without any warranties of any kind.</p>
+                  
+                  <h3 className="text-xl font-bold">3. User Responsibilities</h3>
+                  <p className="opacity-90">You are responsible for ensuring that your device is powered on, your browser is open, and your volume is appropriately set for the alarm to function. We are not liable for any missed appointments, deadlines, or other consequences resulting from the failure of the alarm to sound.</p>
+                  
+                  <h3 className="text-xl font-bold">4. Intellectual Property</h3>
+                  <p className="opacity-90">The design, layout, and source code of Chrono Bento are protected by intellectual property laws. You may not reproduce, distribute, or create derivative works without explicit permission.</p>
+                  
+                  <h3 className="text-xl font-bold">5. Limitation of Liability</h3>
+                  <p className="opacity-90">In no event shall Chrono Bento or its creators be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the service.</p>
+                  
+                  <h3 className="text-xl font-bold">6. Changes to Terms</h3>
+                  <p className="opacity-90">We reserve the right to modify these terms at any time. We will notify users of any changes by updating the date at the top of this page.</p>
+                </div>
+              )}
+
+              {activeModal === 'contact' && (
+                <div className="space-y-6">
+                  <h2 className="font-display text-3xl font-bold mb-2">Contact Us</h2>
+                  <p className="opacity-90 text-lg">We would love to hear from you! Whether you have a feature request, a bug report, or just want to share how Chrono Bento has helped your productivity, please reach out.</p>
+                  
+                  <div className="bg-black/5 dark:bg-white/5 p-6 rounded-2xl mt-8">
+                    <p className="font-medium text-lg mb-2">Email: <a href="mailto:support@chronobento.com" className="text-indigo-500 hover:underline">support@chronobento.com</a></p>
+                    <p className="font-medium text-lg">Twitter: <a href="#" className="text-indigo-500 hover:underline">@ChronoBento</a></p>
+                  </div>
+                  
+                  <p className="text-sm opacity-60 mt-8 italic">(Note: This is a demo application. The above contact details are placeholders.)</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
