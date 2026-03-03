@@ -150,6 +150,16 @@ export default function App() {
   const customAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
+  // Initialize AdSense
+  useEffect(() => {
+    try {
+      const adsbygoogle = (window as any).adsbygoogle || [];
+      adsbygoogle.push({});
+    } catch (e) {
+      console.error("AdSense error", e);
+    }
+  }, []);
+
   const stopAlarm = () => {
     setRingingAlarm(null);
     if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
@@ -487,9 +497,11 @@ export default function App() {
       <div className="w-full max-w-5xl mx-auto flex flex-col flex-1">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4 sm:mt-12">
           
-          {/* Card 1: The Hero (Clock) */}
-        <div className={`md:col-span-8 rounded-3xl p-8 sm:p-12 flex flex-col justify-center items-center relative overflow-hidden min-h-[400px] ${glassClass} ${ringingAlarm ? 'animate-pulse bg-red-500/20' : ''}`}>
-          {ringingAlarm ? (
+          {/* Left Column */}
+          <div className="md:col-span-8 flex flex-col gap-6">
+            {/* Card 1: The Hero (Clock) */}
+            <div className={`rounded-3xl p-8 sm:p-12 flex flex-col justify-center items-center relative overflow-hidden min-h-[400px] ${glassClass} ${ringingAlarm ? 'animate-pulse bg-red-500/20' : ''}`}>
+              {ringingAlarm ? (
             <div className="flex flex-col items-center justify-center text-center z-10 w-full h-full">
               <Bell size={48} className="mb-6 animate-bounce text-red-500" />
               <h1 className="font-display text-5xl sm:text-7xl font-bold tracking-tight mb-2 text-red-500">
@@ -532,7 +544,21 @@ export default function App() {
               </div>
             </>
           )}
-        </div>
+            </div>
+
+            {/* AdSense Placeholder */}
+            <div className={`rounded-3xl p-4 flex flex-col items-center justify-center min-h-[120px] ${glassClass}`}>
+              <span className="text-xs font-medium opacity-40 uppercase tracking-widest mb-2">Advertisement</span>
+              <div className="w-full flex-1 flex items-center justify-center overflow-hidden">
+                <ins className="adsbygoogle"
+                     style={{ display: 'block', width: '100%' }}
+                     data-ad-client="ca-pub-3073231167527027"
+                     data-ad-slot="YOUR_AD_SLOT_ID"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+              </div>
+            </div>
+          </div>
 
         {/* Right Column */}
         <div className="md:col-span-4 flex flex-col gap-6">
