@@ -9,19 +9,19 @@ type Alarm = {
 };
 
 const ALARM_SOUNDS: Record<string, { name: string, url: string }> = {
-  'acoustic_guitar': { name: 'Acoustic Guitar', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Acoustic%20Guitar.mp3' },
-  'action_trailer': { name: 'Action Trailer', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Action%20Trailer.mp3' },
-  'celestial': { name: 'Celestial', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Celestial.mp3' },
-  'chiptune': { name: 'Chiptune', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Chiptune.mp3' },
-  'ethereal_breeze': { name: 'Ethereal Breeze', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Ethereal%20Breeze.mp3' },
-  'funk_beat': { name: 'Funk Beat', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Funk%20Beat.mp3' },
-  'hip_hop': { name: 'Hip Hop', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Hip%20Hop.mp3' },
-  'le_meilleur': { name: 'Le Meilleur', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Le%20Meilleur.mp3' },
-  'morning_sun': { name: 'Morning Sun', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Morning%20Sun.mp3' },
-  'ringphone': { name: 'Ringphone', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Ringphone.mp3' },
-  'slow_ambient': { name: 'Slow Ambient', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Slow%20Ambient.mp3' },
-  'soft_morning': { name: 'Soft Morning', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Soft%20Morning.mp3' },
-  'tropical': { name: 'Tropical', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Tropical.mp3' },
+  'acoustic_guitar': { name: 'Acoustic Guitar', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Acoustic%20Guitar.mp3' },
+  'action_trailer': { name: 'Action Trailer', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Action%20Trailer.mp3' },
+  'celestial': { name: 'Celestial', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Celestial.mp3' },
+  'chiptune': { name: 'Chiptune', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Chiptune.mp3' },
+  'ethereal_breeze': { name: 'Ethereal Breeze', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Ethereal%20Breeze.mp3' },
+  'funk_beat': { name: 'Funk Beat', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Funk%20Beat.mp3' },
+  'hip_hop': { name: 'Hip Hop', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Hip%20Hop.mp3' },
+  'le_meilleur': { name: 'Le Meilleur', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Le%20Meilleur.mp3' },
+  'morning_sun': { name: 'Morning Sun', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Morning%20Sun.mp3' },
+  'ringphone': { name: 'Ringphone', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Ringphone.mp3' },
+  'slow_ambient': { name: 'Slow Ambient', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Slow%20Ambient.mp3' },
+  'soft_morning': { name: 'Soft Morning', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Soft%20Morning.mp3' },
+  'tropical': { name: 'Tropical', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Tropical.mp3' },
 };
 
 // Helper for Notification
