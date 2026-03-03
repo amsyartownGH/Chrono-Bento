@@ -8,138 +8,20 @@ type Alarm = {
   label: string;
 };
 
-// Helper for Web Audio API sounds
-const playSound = (type: string, vol: number) => {
-  const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioContext) return;
-  
-  const ctx = new AudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  
-  const actualVolume = vol; // 0.1 to 2.0
-  
-  if (type === 'beep') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
-    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(actualVolume, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.5);
-  } else if (type === 'radar') {
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(900, ctx.currentTime);
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
-    osc.frequency.setValueAtTime(900, ctx.currentTime + 0.2);
-    gain.gain.setValueAtTime(actualVolume, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.3);
-  } else if (type === 'digital') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(2000, ctx.currentTime);
-    gain.gain.setValueAtTime(actualVolume * 0.3, ctx.currentTime); // square is loud
-    gain.gain.setValueAtTime(0, ctx.currentTime + 0.1);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.1);
-  } else if (type === 'siren') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(400, ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.4);
-    osc.frequency.linearRampToValueAtTime(400, ctx.currentTime + 0.8);
-    gain.gain.setValueAtTime(actualVolume * 0.5, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.8);
-  } else if (type === 'chime') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2); // E5
-    gain.gain.setValueAtTime(actualVolume, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.6);
-  } else if (type === 'buzzer') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(150, ctx.currentTime);
-    gain.gain.setValueAtTime(actualVolume, ctx.currentTime);
-    gain.gain.setValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.5);
-  } else if (type === 'pulse') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(1000, ctx.currentTime);
-    gain.gain.setValueAtTime(actualVolume * 0.2, ctx.currentTime);
-    gain.gain.setValueAtTime(0, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(actualVolume * 0.2, ctx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0, ctx.currentTime + 0.3);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.3);
-  } else if (type === 'sonar') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1200, ctx.currentTime);
-    gain.gain.setValueAtTime(actualVolume, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.8);
-  } else if (type === 'twinkle') {
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.1);
-    osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.2);
-    gain.gain.setValueAtTime(actualVolume * 0.5, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.5);
-  } else if (type === 'foghorn') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(100, ctx.currentTime);
-    gain.gain.setValueAtTime(actualVolume * 0.5, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.9);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.9);
-  } else if (type === 'cricket') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(2500, ctx.currentTime);
-    gain.gain.setValueAtTime(actualVolume * 0.1, ctx.currentTime);
-    gain.gain.setValueAtTime(0, ctx.currentTime + 0.05);
-    gain.gain.setValueAtTime(actualVolume * 0.1, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0, ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(actualVolume * 0.1, ctx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0, ctx.currentTime + 0.25);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.25);
-  } else if (type === 'telephone') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(600, ctx.currentTime);
-    osc.frequency.setValueAtTime(800, ctx.currentTime + 0.05);
-    osc.frequency.setValueAtTime(600, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(actualVolume * 0.3, ctx.currentTime);
-    gain.gain.setValueAtTime(0, ctx.currentTime + 0.4);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.4);
-  } else if (type === 'alien') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1000, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.5);
-    osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.9);
-    gain.gain.setValueAtTime(actualVolume, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.9);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.9);
-  } else if (type === 'emergency') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    osc.frequency.setValueAtTime(1000, ctx.currentTime + 0.4);
-    gain.gain.setValueAtTime(actualVolume * 0.4, ctx.currentTime);
-    gain.gain.setValueAtTime(0.001, ctx.currentTime + 0.8);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.8);
-  }
+const ALARM_SOUNDS: Record<string, { name: string, url: string }> = {
+  'acoustic_guitar': { name: 'Acoustic Guitar', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Acoustic%20Guitar.mp3' },
+  'action_trailer': { name: 'Action Trailer', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Action%20Trailer.mp3' },
+  'celestial': { name: 'Celestial', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Celestial.mp3' },
+  'chiptune': { name: 'Chiptune', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Chiptune.mp3' },
+  'ethereal_breeze': { name: 'Ethereal Breeze', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Ethereal%20Breeze.mp3' },
+  'funk_beat': { name: 'Funk Beat', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Funk%20Beat.mp3' },
+  'hip_hop': { name: 'Hip Hop', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Hip%20Hop.mp3' },
+  'le_meilleur': { name: 'Le Meilleur', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Le%20Meilleur.mp3' },
+  'morning_sun': { name: 'Morning Sun', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Morning%20Sun.mp3' },
+  'ringphone': { name: 'Ringphone', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Ringphone.mp3' },
+  'slow_ambient': { name: 'Slow Ambient', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Slow%20Ambient.mp3' },
+  'soft_morning': { name: 'Soft Morning', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Soft%20Morning.mp3' },
+  'tropical': { name: 'Tropical', url: 'https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/main/assets/audio/Chrono%20Bento%20music/Tropical.mp3' },
 };
 
 // Helper for Notification
@@ -257,7 +139,7 @@ export default function App() {
   const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'contact' | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState(1.0);
-  const [soundType, setSoundType] = useState('beep');
+  const [soundType, setSoundType] = useState('acoustic_guitar');
   const [ringingAlarm, setRingingAlarm] = useState<Alarm | null>(null);
   const [customAudioName, setCustomAudioName] = useState<string>('');
   const [use24HourFormat, setUse24HourFormat] = useState(false);
@@ -266,6 +148,7 @@ export default function App() {
   const ringIntervalRef = useRef<number | null>(null);
   const ringTimeoutRef = useRef<number | null>(null);
   const customAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
   const stopAlarm = () => {
     setRingingAlarm(null);
@@ -274,6 +157,10 @@ export default function App() {
     if (customAudioRef.current) {
       customAudioRef.current.pause();
       customAudioRef.current.currentTime = 0;
+    }
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current.currentTime = 0;
     }
   };
 
@@ -288,7 +175,13 @@ export default function App() {
     const savedVol = localStorage.getItem('chrono_volume');
     if (savedVol) setVolume(parseFloat(savedVol));
     const savedSound = localStorage.getItem('chrono_sound');
-    if (savedSound) setSoundType(savedSound);
+    if (savedSound) {
+      if (ALARM_SOUNDS[savedSound] || savedSound === 'custom') {
+        setSoundType(savedSound);
+      } else {
+        setSoundType('acoustic_guitar');
+      }
+    }
     const saved24h = localStorage.getItem('chrono_24h');
     if (saved24h) setUse24HourFormat(saved24h === 'true');
     
@@ -346,11 +239,20 @@ export default function App() {
                 if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
               }, 2000);
             } else {
+              const soundUrl = ALARM_SOUNDS[soundType]?.url;
+              if (soundUrl) {
+                if (audioPlayerRef.current) audioPlayerRef.current.pause();
+                const audio = new Audio(soundUrl);
+                audio.loop = true;
+                audio.volume = Math.min(volume, 1.0);
+                audio.play().catch(e => console.error("Audio play failed", e));
+                audioPlayerRef.current = audio;
+              }
+              
               if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
               ringIntervalRef.current = window.setInterval(() => {
-                playSound(soundType, volume);
                 if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
-              }, 1000);
+              }, 2000);
             }
           }
           
@@ -527,7 +429,22 @@ export default function App() {
         }, 3000);
       }
     } else {
-      playSound(type, vol);
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      const soundUrl = ALARM_SOUNDS[type]?.url;
+      if (soundUrl) {
+        const audio = new Audio(soundUrl);
+        audio.volume = Math.min(vol, 1.0);
+        audio.play().catch(e => console.error(e));
+        audioPlayerRef.current = audio;
+        
+        setTimeout(() => {
+          if (audioPlayerRef.current === audio) {
+            audio.pause();
+          }
+        }, 3000);
+      }
     }
   };
 
@@ -668,20 +585,19 @@ export default function App() {
                     }}
                     className={`text-sm p-1.5 rounded-lg outline-none font-medium cursor-pointer max-w-[150px] truncate ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 text-white [&>option]:bg-slate-900' : 'bg-black/5 text-slate-900 [&>option]:bg-white'}`}
                   >
-                    <option value="beep">Classic Beep</option>
-                    <option value="radar">Radar</option>
-                    <option value="digital">Digital Watch</option>
-                    <option value="siren">Warning Siren</option>
-                    <option value="chime">Door Chime</option>
-                    <option value="buzzer">Harsh Buzzer</option>
-                    <option value="pulse">Rapid Pulse</option>
-                    <option value="sonar">Submarine Sonar</option>
-                    <option value="twinkle">Magic Twinkle</option>
-                    <option value="foghorn">Deep Foghorn</option>
-                    <option value="cricket">Cricket Chirp</option>
-                    <option value="telephone">Retro Telephone</option>
-                    <option value="alien">Alien Spaceship</option>
-                    <option value="emergency">Emergency Broadcast</option>
+                    <option value="acoustic_guitar">Acoustic Guitar</option>
+                    <option value="action_trailer">Action Trailer</option>
+                    <option value="celestial">Celestial</option>
+                    <option value="chiptune">Chiptune</option>
+                    <option value="ethereal_breeze">Ethereal Breeze</option>
+                    <option value="funk_beat">Funk Beat</option>
+                    <option value="hip_hop">Hip Hop</option>
+                    <option value="le_meilleur">Le Meilleur</option>
+                    <option value="morning_sun">Morning Sun</option>
+                    <option value="ringphone">Ringphone</option>
+                    <option value="slow_ambient">Slow Ambient</option>
+                    <option value="soft_morning">Soft Morning</option>
+                    <option value="tropical">Tropical</option>
                     <option value="custom">Custom Upload...</option>
                   </select>
                 </div>
@@ -881,8 +797,14 @@ export default function App() {
 
         {/* Legal Modals */}
         {activeModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl p-8 shadow-2xl ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setActiveModal(null)}
+          >
+            <div 
+              className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl p-8 shadow-2xl ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
               <button 
                 onClick={() => setActiveModal(null)}
                 className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
@@ -947,11 +869,8 @@ export default function App() {
                   <p className="opacity-90 text-lg">We would love to hear from you! Whether you have a feature request, a bug report, or just want to share how Chrono Bento has helped your productivity, please reach out.</p>
                   
                   <div className="bg-black/5 dark:bg-white/5 p-6 rounded-2xl mt-8">
-                    <p className="font-medium text-lg mb-2">Email: <a href="mailto:support@chronobento.com" className="text-indigo-500 hover:underline">support@chronobento.com</a></p>
-                    <p className="font-medium text-lg">Twitter: <a href="#" className="text-indigo-500 hover:underline">@ChronoBento</a></p>
+                    <p className="font-medium text-lg">Email: <a href="mailto:support@chronobento.com" className="text-indigo-500 hover:underline">support@chronobento.com</a></p>
                   </div>
-                  
-                  <p className="text-sm opacity-60 mt-8 italic">(Note: This is a demo application. The above contact details are placeholders.)</p>
                 </div>
               )}
             </div>
