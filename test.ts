@@ -1,0 +1,1 @@
+fetch('https://raw.githubusercontent.com/amsyartownGH/Chrono-Bento/631d92abaa59843d9b3630cd8e062df674a6f43a/assets/audio/Chrono%20Bento%20music/Acoustic%20Guitar.mp3').then(r => console.log(r.headers.get('content-type'), r.headers.get('x-content-type-options')))
