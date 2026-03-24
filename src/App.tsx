@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload, X } from 'lucide-react';
+import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload, X, Play, Square, RotateCcw, Flag, Hourglass, Timer, Globe } from 'lucide-react';
 
 type Alarm = {
   id: string;
@@ -130,6 +130,314 @@ const ScrollPicker = ({ items, value, onChange, width = "w-16" }: { items: strin
   );
 };
 
+const TimerView = ({ glassClass, soundEnabled, soundType, volume, customAudioRef, audioPlayerRef }: { glassClass: string, soundEnabled: boolean, soundType: string, volume: number, customAudioRef: React.MutableRefObject<HTMLAudioElement | null>, audioPlayerRef: React.MutableRefObject<HTMLAudioElement | null> }) => {
+  const [inputH, setInputH] = useState(0);
+  const [inputM, setInputM] = useState(5);
+  const [inputS, setInputS] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isRinging, setIsRinging] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  const startTimer = () => {
+    if (timeLeft === 0) {
+      setTimeLeft(inputH * 3600 + inputM * 60 + inputS);
+    }
+    setIsRunning(true);
+    setIsRinging(false);
+  };
+
+  const pauseTimer = () => {
+    setIsRunning(false);
+  };
+
+  const resetTimer = () => {
+    setIsRunning(false);
+    setTimeLeft(0);
+    setIsRinging(false);
+    stopSound();
+  };
+
+  const stopSound = () => {
+    setIsRinging(false);
+    if (customAudioRef.current) {
+      customAudioRef.current.pause();
+      customAudioRef.current.currentTime = 0;
+    }
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current.currentTime = 0;
+    }
+  };
+
+  useEffect(() => {
+    if (isRunning && timeLeft > 0) {
+      timerRef.current = window.setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            setIsRunning(false);
+            setIsRinging(true);
+            if (soundEnabled) {
+              if (soundType === 'custom' && customAudioRef.current) {
+                customAudioRef.current.loop = true;
+                customAudioRef.current.volume = Math.min(volume, 1.0);
+                customAudioRef.current.play().catch(e => console.error(e));
+              } else {
+                const soundUrl = ALARM_SOUNDS[soundType]?.url;
+                if (soundUrl) {
+                  if (audioPlayerRef.current) audioPlayerRef.current.pause();
+                  const audio = new Audio(soundUrl);
+                  audio.loop = true;
+                  audio.volume = Math.min(volume, 1.0);
+                  audio.play().catch(e => console.error(e));
+                  audioPlayerRef.current = audio;
+                }
+              }
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isRunning, timeLeft, soundEnabled, soundType, volume, customAudioRef, audioPlayerRef]);
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) {
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className={`rounded-3xl p-8 sm:p-12 flex flex-col justify-center items-center relative overflow-hidden min-h-[400px] ${glassClass} ${isRinging ? 'animate-pulse bg-red-500/20' : ''}`}>
+      {isRinging ? (
+        <div className="flex flex-col items-center justify-center text-center z-10 w-full h-full">
+          <Hourglass size={48} className="mb-6 animate-bounce text-red-500" />
+          <h1 className="font-display text-5xl sm:text-7xl font-bold tracking-tight mb-2 text-red-500">
+            Time's Up!
+          </h1>
+          <button 
+            onClick={resetTimer}
+            className="mt-8 btn-tactile py-4 px-12 rounded-2xl font-bold text-xl bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/30 w-full max-w-md"
+          >
+            STOP TIMER
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="absolute top-6 left-6 flex items-center gap-2 opacity-60">
+            <Hourglass size={20} />
+            <span className="font-medium tracking-widest uppercase text-sm">Timer</span>
+          </div>
+          
+          <div className="kinetic-text text-center mt-8">
+            {isRunning || timeLeft > 0 ? (
+              <h1 className="font-mono text-6xl sm:text-8xl md:text-9xl font-bold tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                {formatTime(timeLeft)}
+              </h1>
+            ) : (
+              <div className="flex items-center justify-center gap-4 text-4xl sm:text-6xl font-mono font-bold">
+                <div className="flex flex-col items-center">
+                  <input type="number" min="0" max="99" value={inputH} onChange={e => setInputH(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" />
+                  <span className="text-sm opacity-50 mt-2">HR</span>
+                </div>
+                <span>:</span>
+                <div className="flex flex-col items-center">
+                  <input type="number" min="0" max="59" value={inputM} onChange={e => setInputM(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" />
+                  <span className="text-sm opacity-50 mt-2">MIN</span>
+                </div>
+                <span>:</span>
+                <div className="flex flex-col items-center">
+                  <input type="number" min="0" max="59" value={inputS} onChange={e => setInputS(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" />
+                  <span className="text-sm opacity-50 mt-2">SEC</span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-12 flex items-center gap-4">
+            {!isRunning ? (
+              <button onClick={startTimer} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-indigo-500 hover:bg-indigo-400 text-white flex items-center gap-2">
+                <Play size={20} /> Start
+              </button>
+            ) : (
+              <button onClick={pauseTimer} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-amber-500 hover:bg-amber-400 text-white flex items-center gap-2">
+                <Square size={20} /> Pause
+              </button>
+            )}
+            <button onClick={resetTimer} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-slate-500 hover:bg-slate-400 text-white flex items-center gap-2">
+              <RotateCcw size={20} /> Reset
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const StopwatchView = ({ glassClass }: { glassClass: string }) => {
+  const [time, setTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [laps, setLaps] = useState<{time: number, diff: number}[]>([]);
+  const timerRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+
+  const startStopwatch = () => {
+    if (!isRunning) {
+      startTimeRef.current = Date.now() - time;
+      setIsRunning(true);
+      timerRef.current = window.setInterval(() => {
+        setTime(Date.now() - startTimeRef.current);
+      }, 10);
+    }
+  };
+
+  const pauseStopwatch = () => {
+    setIsRunning(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+  };
+
+  const resetStopwatch = () => {
+    setIsRunning(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTime(0);
+    setLaps([]);
+  };
+
+  const addLap = () => {
+    const prevLapTime = laps.length > 0 ? laps[0].time : 0;
+    setLaps([{ time, diff: time - prevLapTime }, ...laps]);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const formatTime = (ms: number) => {
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    const ms10 = Math.floor((ms % 1000) / 10);
+    if (h > 0) {
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms10.toString().padStart(2, '0')}`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms10.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className={`rounded-3xl p-8 sm:p-12 flex flex-col items-center relative min-h-[400px] ${glassClass}`}>
+      <div className="absolute top-6 left-6 flex items-center gap-2 opacity-60">
+        <Timer size={20} />
+        <span className="font-medium tracking-widest uppercase text-sm">Stopwatch</span>
+      </div>
+      
+      <div className="kinetic-text text-center mt-8">
+        <h1 className="font-mono text-6xl sm:text-8xl md:text-9xl font-bold tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {formatTime(time)}
+        </h1>
+      </div>
+      
+      <div className="mt-12 flex items-center gap-4">
+        {!isRunning ? (
+          <button onClick={startStopwatch} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-indigo-500 hover:bg-indigo-400 text-white flex items-center gap-2">
+            <Play size={20} /> Start
+          </button>
+        ) : (
+          <button onClick={pauseStopwatch} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-amber-500 hover:bg-amber-400 text-white flex items-center gap-2">
+            <Square size={20} /> Pause
+          </button>
+        )}
+        <button onClick={isRunning ? addLap : resetStopwatch} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-slate-500 hover:bg-slate-400 text-white flex items-center gap-2">
+          {isRunning ? <><Flag size={20} /> Lap</> : <><RotateCcw size={20} /> Reset</>}
+        </button>
+      </div>
+
+      {laps.length > 0 && (
+        <div className="mt-12 w-full max-w-md">
+          <h3 className="text-lg font-bold mb-4 opacity-70 border-b border-black/10 dark:border-white/10 pb-2">Laps</h3>
+          <div className="max-h-[200px] overflow-y-auto pr-2 space-y-2">
+            {laps.map((lap, i) => (
+              <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-black/5 dark:bg-white/5 font-mono">
+                <span className="opacity-50">Lap {laps.length - i}</span>
+                <span className="opacity-70">+{formatTime(lap.diff)}</span>
+                <span className="font-bold">{formatTime(lap.time)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CITIES = [
+  { name: 'New York', tz: 'America/New_York' },
+  { name: 'London', tz: 'Europe/London' },
+  { name: 'Paris', tz: 'Europe/Paris' },
+  { name: 'Dubai', tz: 'Asia/Dubai' },
+  { name: 'Tokyo', tz: 'Asia/Tokyo' },
+  { name: 'Sydney', tz: 'Australia/Sydney' },
+  { name: 'Los Angeles', tz: 'America/Los_Angeles' },
+  { name: 'Hong Kong', tz: 'Asia/Hong_Kong' },
+];
+
+const WorldClockView = ({ glassClass }: { glassClass: string }) => {
+  const [now, setNow] = useState(new Date());
+  
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getCityTime = (tz: string) => {
+    return now.toLocaleTimeString('en-US', { timeZone: tz, hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  };
+
+  const getCityDate = (tz: string) => {
+    return now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const getDiff = (tz: string) => {
+    const localDate = new Date(now.toLocaleString('en-US'));
+    const cityDate = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+    const diffHours = Math.round((cityDate.getTime() - localDate.getTime()) / 3600000);
+    
+    if (diffHours === 0) return 'Same time';
+    return `${diffHours > 0 ? '+' : ''}${diffHours}h`;
+  };
+
+  return (
+    <div className={`rounded-3xl p-8 sm:p-12 flex flex-col relative min-h-[400px] ${glassClass}`}>
+      <div className="absolute top-6 left-6 flex items-center gap-2 opacity-60">
+        <Globe size={20} />
+        <span className="font-medium tracking-widest uppercase text-sm">World Clock</span>
+      </div>
+      
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {CITIES.map(city => (
+          <div key={city.name} className="p-6 rounded-2xl bg-black/5 dark:bg-white/5 flex flex-col">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xl font-bold">{city.name}</h3>
+              <span className="text-xs font-medium opacity-80 bg-black/10 dark:bg-white/10 px-2 py-1 rounded-lg">{getDiff(city.tz)}</span>
+            </div>
+            <div className="font-mono text-2xl font-bold tracking-tight mb-1">{getCityTime(city.tz)}</div>
+            <div className="text-sm opacity-70 font-medium">{getCityDate(city.tz)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [time, setTime] = useState(new Date());
   const [alarms, setAlarms] = useState<Alarm[]>([]);
@@ -143,6 +451,7 @@ export default function App() {
   const [ringingAlarm, setRingingAlarm] = useState<Alarm | null>(null);
   const [customAudioName, setCustomAudioName] = useState<string>('');
   const [use24HourFormat, setUse24HourFormat] = useState(false);
+  const [activeTab, setActiveTab] = useState<'alarm' | 'timer' | 'stopwatch' | 'worldclock'>('alarm');
   
   const lastTriggeredRef = useRef<string | null>(null);
   const ringIntervalRef = useRef<number | null>(null);
@@ -495,7 +804,25 @@ export default function App() {
   return (
     <div className={`min-h-screen transition-colors duration-1000 flex flex-col p-4 sm:p-8 ${getBackgroundClass()}`}>
       <div className="w-full max-w-5xl mx-auto flex flex-col flex-1">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4 sm:mt-12">
+        
+        {/* Top Navigation Bar */}
+        <div className={`rounded-2xl p-2 mb-6 flex flex-wrap gap-2 justify-center ${glassClass}`}>
+          <button onClick={() => setActiveTab('alarm')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'alarm' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
+            <Bell size={18} /> Alarm Clock
+          </button>
+          <button onClick={() => setActiveTab('timer')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'timer' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
+            <Hourglass size={18} /> Timer
+          </button>
+          <button onClick={() => setActiveTab('stopwatch')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'stopwatch' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
+            <Timer size={18} /> Stopwatch
+          </button>
+          <button onClick={() => setActiveTab('worldclock')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'worldclock' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
+            <Globe size={18} /> World Clock
+          </button>
+        </div>
+
+        {activeTab === 'alarm' && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4 sm:mt-8">
           
           {/* Left Column */}
           <div className="md:col-span-8 flex flex-col gap-6">
@@ -755,6 +1082,26 @@ export default function App() {
           
         </div>
         </div>
+        )}
+
+        {activeTab === 'timer' && (
+          <TimerView 
+            glassClass={glassClass} 
+            soundEnabled={soundEnabled} 
+            soundType={soundType} 
+            volume={volume} 
+            customAudioRef={customAudioRef} 
+            audioPlayerRef={audioPlayerRef} 
+          />
+        )}
+
+        {activeTab === 'stopwatch' && (
+          <StopwatchView glassClass={glassClass} />
+        )}
+
+        {activeTab === 'worldclock' && (
+          <WorldClockView glassClass={glassClass} />
+        )}
         
         {/* Content Sections */}
         <div className="mt-24 max-w-4xl mx-auto space-y-16 pb-16 flex-1 w-full">
