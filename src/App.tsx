@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload, X, Play, Square, RotateCcw, Flag, Hourglass, Timer, Globe } from 'lucide-react';
+import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload, X, Play, Square, RotateCcw, Flag, Hourglass, Timer, Globe, Search, Tag } from 'lucide-react';
 
 type Alarm = {
   id: string;
   time: string; // HH:mm
   enabled: boolean;
   label: string;
+  repeat?: boolean;
 };
 
 const ALARM_SOUNDS: Record<string, { name: string, url: string }> = {
@@ -31,7 +32,7 @@ const sendNotification = (title: string, body: string) => {
   }
 };
 
-const ScrollPicker = ({ items, value, onChange, width = "w-16" }: { items: string[], value: string, onChange: (val: string) => void, width?: string }) => {
+const ScrollPicker = ({ items, value, onChange, width = "w-16", label }: { items: string[], value: string, onChange: (val: string) => void, width?: string, label?: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemHeight = 40;
   const isScrolling = useRef(false);
@@ -115,17 +116,41 @@ const ScrollPicker = ({ items, value, onChange, width = "w-16" }: { items: strin
       ref={containerRef}
       className={`h-[120px] overflow-y-auto snap-y snap-mandatory hide-scrollbar ${width} relative`}
       onScroll={handleScroll}
+      tabIndex={0}
+      role="spinbutton"
+      aria-valuenow={parseInt(value) || 0}
+      aria-valuemin={0}
+      aria-valuemax={items.length - 1}
+      aria-valuetext={value}
+      aria-label={label || "Time picker"}
+      onKeyDown={(e) => {
+        const index = items.indexOf(value);
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (index > 0) {
+            onChange(items[index - 1]);
+            containerRef.current?.scrollTo({ top: (index - 1) * itemHeight, behavior: 'smooth' });
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (index < items.length - 1) {
+            onChange(items[index + 1]);
+            containerRef.current?.scrollTo({ top: (index + 1) * itemHeight, behavior: 'smooth' });
+          }
+        }
+      }}
     >
-      <div className="h-[40px]" />
+      <div className="h-[40px]" aria-hidden="true" />
       {items.map(item => (
         <div 
           key={item} 
           className={`h-[40px] flex items-center justify-center snap-center text-2xl font-mono transition-all duration-200 ${item === value ? 'opacity-100 font-bold scale-110' : 'opacity-30 scale-90'}`}
+          aria-hidden="true"
         >
           {item}
         </div>
       ))}
-      <div className="h-[40px]" />
+      <div className="h-[40px]" aria-hidden="true" />
     </div>
   );
 };
@@ -245,18 +270,18 @@ const TimerView = ({ glassClass, soundEnabled, soundType, volume, customAudioRef
             ) : (
               <div className="flex items-center justify-center gap-4 text-4xl sm:text-6xl font-mono font-bold">
                 <div className="flex flex-col items-center">
-                  <input type="number" min="0" max="99" value={inputH} onChange={e => setInputH(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" />
-                  <span className="text-sm opacity-50 mt-2">HR</span>
+                  <input type="number" min="0" max="99" value={inputH} onChange={e => setInputH(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" aria-label="Hours" />
+                  <span className="text-sm opacity-50 mt-2" aria-hidden="true">HR</span>
                 </div>
-                <span>:</span>
+                <span aria-hidden="true">:</span>
                 <div className="flex flex-col items-center">
-                  <input type="number" min="0" max="59" value={inputM} onChange={e => setInputM(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" />
-                  <span className="text-sm opacity-50 mt-2">MIN</span>
+                  <input type="number" min="0" max="59" value={inputM} onChange={e => setInputM(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" aria-label="Minutes" />
+                  <span className="text-sm opacity-50 mt-2" aria-hidden="true">MIN</span>
                 </div>
-                <span>:</span>
+                <span aria-hidden="true">:</span>
                 <div className="flex flex-col items-center">
-                  <input type="number" min="0" max="59" value={inputS} onChange={e => setInputS(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" />
-                  <span className="text-sm opacity-50 mt-2">SEC</span>
+                  <input type="number" min="0" max="59" value={inputS} onChange={e => setInputS(parseInt(e.target.value)||0)} className="w-20 sm:w-24 bg-transparent text-center outline-none border-b-2 border-black/20 dark:border-white/20 focus:border-indigo-500" aria-label="Seconds" />
+                  <span className="text-sm opacity-50 mt-2" aria-hidden="true">SEC</span>
                 </div>
               </div>
             )}
@@ -265,15 +290,15 @@ const TimerView = ({ glassClass, soundEnabled, soundType, volume, customAudioRef
           <div className="mt-12 flex items-center gap-4">
             {!isRunning ? (
               <button onClick={startTimer} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-indigo-500 hover:bg-indigo-400 text-white flex items-center gap-2">
-                <Play size={20} /> Start
+                <Play size={20} aria-hidden="true" /> Start
               </button>
             ) : (
               <button onClick={pauseTimer} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-amber-500 hover:bg-amber-400 text-white flex items-center gap-2">
-                <Square size={20} /> Pause
+                <Square size={20} aria-hidden="true" /> Pause
               </button>
             )}
             <button onClick={resetTimer} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-slate-500 hover:bg-slate-400 text-white flex items-center gap-2">
-              <RotateCcw size={20} /> Reset
+              <RotateCcw size={20} aria-hidden="true" /> Reset
             </button>
           </div>
         </>
@@ -349,22 +374,31 @@ const StopwatchView = ({ glassClass }: { glassClass: string }) => {
       <div className="mt-12 flex items-center gap-4">
         {!isRunning ? (
           <button onClick={startStopwatch} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-indigo-500 hover:bg-indigo-400 text-white flex items-center gap-2">
-            <Play size={20} /> Start
+            <Play size={20} aria-hidden="true" /> Start
           </button>
         ) : (
           <button onClick={pauseStopwatch} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-amber-500 hover:bg-amber-400 text-white flex items-center gap-2">
-            <Square size={20} /> Pause
+            <Square size={20} aria-hidden="true" /> Pause
           </button>
         )}
         <button onClick={isRunning ? addLap : resetStopwatch} className="btn-tactile py-3 px-8 rounded-xl font-bold text-lg bg-slate-500 hover:bg-slate-400 text-white flex items-center gap-2">
-          {isRunning ? <><Flag size={20} /> Lap</> : <><RotateCcw size={20} /> Reset</>}
+          {isRunning ? <><Flag size={20} aria-hidden="true" /> Lap</> : <><RotateCcw size={20} aria-hidden="true" /> Reset</>}
         </button>
       </div>
 
-      {laps.length > 0 && (
+      {time > 0 && (
         <div className="mt-12 w-full max-w-md">
           <h3 className="text-lg font-bold mb-4 opacity-70 border-b border-black/10 dark:border-white/10 pb-2">Laps</h3>
           <div className="max-h-[200px] overflow-y-auto pr-2 space-y-2">
+            {/* Current running lap */}
+            {(isRunning || (time > 0 && laps.length === 0) || (time > 0 && laps.length > 0 && time > laps[0].time)) && (
+              <div className="flex justify-between items-center p-3 rounded-lg bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-mono border border-indigo-500/20">
+                <span className="opacity-70">Lap {laps.length + 1}</span>
+                <span className="opacity-90">+{formatTime(time - (laps.length > 0 ? laps[0].time : 0))}</span>
+                <span className="font-bold">{formatTime(time)}</span>
+              </div>
+            )}
+            {/* Recorded laps */}
             {laps.map((lap, i) => (
               <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-black/5 dark:bg-white/5 font-mono">
                 <span className="opacity-50">Lap {laps.length - i}</span>
@@ -379,23 +413,208 @@ const StopwatchView = ({ glassClass }: { glassClass: string }) => {
   );
 };
 
-const CITIES = [
-  { name: 'New York', tz: 'America/New_York' },
-  { name: 'London', tz: 'Europe/London' },
-  { name: 'Paris', tz: 'Europe/Paris' },
-  { name: 'Dubai', tz: 'Asia/Dubai' },
-  { name: 'Tokyo', tz: 'Asia/Tokyo' },
-  { name: 'Sydney', tz: 'Australia/Sydney' },
-  { name: 'Los Angeles', tz: 'America/Los_Angeles' },
-  { name: 'Hong Kong', tz: 'Asia/Hong_Kong' },
+const DEFAULT_CITIES = [
+  { name: 'New York', country: 'USA', tz: 'America/New_York' },
+  { name: 'London', country: 'UK', tz: 'Europe/London' },
+  { name: 'Paris', country: 'France', tz: 'Europe/Paris' },
+  { name: 'Dubai', country: 'UAE', tz: 'Asia/Dubai' },
+  { name: 'Tokyo', country: 'Japan', tz: 'Asia/Tokyo' },
+  { name: 'Sydney', country: 'Australia', tz: 'Australia/Sydney' },
+  { name: 'Los Angeles', country: 'USA', tz: 'America/Los_Angeles' },
+  { name: 'Hong Kong', country: 'China', tz: 'Asia/Hong_Kong' },
+  { name: 'Kuala Lumpur', country: 'Malaysia', tz: 'Asia/Kuala_Lumpur' },
+  { name: 'Cairo', country: 'Egypt', tz: 'Africa/Cairo' },
+];
+
+const ALL_CITIES = [
+  ...DEFAULT_CITIES,
+  { name: 'Berlin', country: 'Germany', tz: 'Europe/Berlin' },
+  { name: 'Rome', country: 'Italy', tz: 'Europe/Rome' },
+  { name: 'Madrid', country: 'Spain', tz: 'Europe/Madrid' },
+  { name: 'Moscow', country: 'Russia', tz: 'Europe/Moscow' },
+  { name: 'Mumbai', country: 'India', tz: 'Asia/Kolkata' },
+  { name: 'Beijing', country: 'China', tz: 'Asia/Shanghai' },
+  { name: 'Seoul', country: 'South Korea', tz: 'Asia/Seoul' },
+  { name: 'Singapore', country: 'Singapore', tz: 'Asia/Singapore' },
+  { name: 'Bangkok', country: 'Thailand', tz: 'Asia/Bangkok' },
+  { name: 'Jakarta', country: 'Indonesia', tz: 'Asia/Jakarta' },
+  { name: 'Istanbul', country: 'Turkey', tz: 'Europe/Istanbul' },
+  { name: 'Riyadh', country: 'Saudi Arabia', tz: 'Asia/Riyadh' },
+  { name: 'Johannesburg', country: 'South Africa', tz: 'Africa/Johannesburg' },
+  { name: 'Lagos', country: 'Nigeria', tz: 'Africa/Lagos' },
+  { name: 'Nairobi', country: 'Kenya', tz: 'Africa/Nairobi' },
+  { name: 'Toronto', country: 'Canada', tz: 'America/Toronto' },
+  { name: 'Vancouver', country: 'Canada', tz: 'America/Vancouver' },
+  { name: 'Mexico City', country: 'Mexico', tz: 'America/Mexico_City' },
+  { name: 'São Paulo', country: 'Brazil', tz: 'America/Sao_Paulo' },
+  { name: 'Buenos Aires', country: 'Argentina', tz: 'America/Argentina/Buenos_Aires' },
+  { name: 'Lima', country: 'Peru', tz: 'America/Lima' },
+  { name: 'Chicago', country: 'USA', tz: 'America/Chicago' },
+  { name: 'Houston', country: 'USA', tz: 'America/Chicago' },
+  { name: 'Miami', country: 'USA', tz: 'America/New_York' },
+  { name: 'San Francisco', country: 'USA', tz: 'America/Los_Angeles' },
+  { name: 'Amsterdam', country: 'Netherlands', tz: 'Europe/Amsterdam' },
+  { name: 'Vienna', country: 'Austria', tz: 'Europe/Vienna' },
+  { name: 'Athens', country: 'Greece', tz: 'Europe/Athens' },
+  { name: 'Stockholm', country: 'Sweden', tz: 'Europe/Stockholm' },
+  { name: 'Oslo', country: 'Norway', tz: 'Europe/Oslo' },
+  { name: 'Helsinki', country: 'Finland', tz: 'Europe/Helsinki' },
+  { name: 'Copenhagen', country: 'Denmark', tz: 'Europe/Copenhagen' },
+  { name: 'Dublin', country: 'Ireland', tz: 'Europe/Dublin' },
+  { name: 'Auckland', country: 'New Zealand', tz: 'Pacific/Auckland' },
+  { name: 'Fiji', country: 'Fiji', tz: 'Pacific/Fiji' },
+  { name: 'Honolulu', country: 'USA', tz: 'Pacific/Honolulu' },
+  { name: 'Manila', country: 'Philippines', tz: 'Asia/Manila' },
+  { name: 'Taipei', country: 'Taiwan', tz: 'Asia/Taipei' },
+  { name: 'Karachi', country: 'Pakistan', tz: 'Asia/Karachi' },
+  { name: 'Dhaka', country: 'Bangladesh', tz: 'Asia/Dhaka' },
+  { name: 'Tehran', country: 'Iran', tz: 'Asia/Tehran' },
+  { name: 'Baghdad', country: 'Iraq', tz: 'Asia/Baghdad' },
+  { name: 'Jerusalem', country: 'Israel', tz: 'Asia/Jerusalem' },
+  { name: 'Austin', country: 'USA', tz: 'America/Chicago' },
+  { name: 'Denver', country: 'USA', tz: 'America/Denver' },
+  { name: 'Seattle', country: 'USA', tz: 'America/Los_Angeles' },
+  { name: 'Portland', country: 'USA', tz: 'America/Los_Angeles' },
+  { name: 'Calgary', country: 'Canada', tz: 'America/Edmonton' },
+  { name: 'Montreal', country: 'Canada', tz: 'America/Toronto' },
+  { name: 'Monterrey', country: 'Mexico', tz: 'America/Monterrey' },
+  { name: 'Guadalajara', country: 'Mexico', tz: 'America/Mexico_City' },
+  { name: 'San Juan', country: 'Puerto Rico', tz: 'America/Puerto_Rico' },
+  { name: 'Havana', country: 'Cuba', tz: 'America/Havana' },
+  { name: 'Kingston', country: 'Jamaica', tz: 'America/Jamaica' },
+  { name: 'Bogota', country: 'Colombia', tz: 'America/Bogota' },
+  { name: 'Caracas', country: 'Venezuela', tz: 'America/Caracas' },
+  { name: 'Quito', country: 'Ecuador', tz: 'America/Guayaquil' },
+  { name: 'Montevideo', country: 'Uruguay', tz: 'America/Montevideo' },
+  { name: 'Asuncion', country: 'Paraguay', tz: 'America/Asuncion' },
+  { name: 'La Paz', country: 'Bolivia', tz: 'America/La_Paz' },
+  { name: 'Cordoba', country: 'Argentina', tz: 'America/Argentina/Cordoba' },
+  { name: 'Rosario', country: 'Argentina', tz: 'America/Argentina/Cordoba' },
+  { name: 'Valparaiso', country: 'Chile', tz: 'America/Santiago' },
+  { name: 'Manchester', country: 'UK', tz: 'Europe/London' },
+  { name: 'Edinburgh', country: 'UK', tz: 'Europe/London' },
+  { name: 'Lyon', country: 'France', tz: 'Europe/Paris' },
+  { name: 'Marseille', country: 'France', tz: 'Europe/Paris' },
+  { name: 'Munich', country: 'Germany', tz: 'Europe/Berlin' },
+  { name: 'Frankfurt', country: 'Germany', tz: 'Europe/Berlin' },
+  { name: 'Milan', country: 'Italy', tz: 'Europe/Rome' },
+  { name: 'Naples', country: 'Italy', tz: 'Europe/Rome' },
+  { name: 'Barcelona', country: 'Spain', tz: 'Europe/Madrid' },
+  { name: 'Valencia', country: 'Spain', tz: 'Europe/Madrid' },
+  { name: 'Porto', country: 'Portugal', tz: 'Europe/Lisbon' },
+  { name: 'Geneva', country: 'Switzerland', tz: 'Europe/Zurich' },
+  { name: 'Zurich', country: 'Switzerland', tz: 'Europe/Zurich' },
+  { name: 'Krakow', country: 'Poland', tz: 'Europe/Warsaw' },
+  { name: 'Budapest', country: 'Hungary', tz: 'Europe/Budapest' },
+  { name: 'Prague', country: 'Czechia', tz: 'Europe/Prague' },
+  { name: 'Bratislava', country: 'Slovakia', tz: 'Europe/Bratislava' },
+  { name: 'Sofia', country: 'Bulgaria', tz: 'Europe/Sofia' },
+  { name: 'Belgrade', country: 'Serbia', tz: 'Europe/Belgrade' },
+  { name: 'Kyoto', country: 'Japan', tz: 'Asia/Tokyo' },
+  { name: 'Osaka', country: 'Japan', tz: 'Asia/Tokyo' },
+  { name: 'Sapporo', country: 'Japan', tz: 'Asia/Tokyo' },
+  { name: 'Busan', country: 'South Korea', tz: 'Asia/Seoul' },
+  { name: 'Incheon', country: 'South Korea', tz: 'Asia/Seoul' },
+  { name: 'Fukuoka', country: 'Japan', tz: 'Asia/Tokyo' },
+  { name: 'Kaohsiung', country: 'Taiwan', tz: 'Asia/Taipei' },
+  { name: 'Cebu', country: 'Philippines', tz: 'Asia/Manila' },
+  { name: 'Davao', country: 'Philippines', tz: 'Asia/Manila' },
+  { name: 'Surabaya', country: 'Indonesia', tz: 'Asia/Jakarta' },
+  { name: 'Bandung', country: 'Indonesia', tz: 'Asia/Jakarta' },
+  { name: 'Penang', country: 'Malaysia', tz: 'Asia/Kuala_Lumpur' },
+  { name: 'Johor Bahru', country: 'Malaysia', tz: 'Asia/Kuala_Lumpur' },
+  { name: 'Chiang Mai', country: 'Thailand', tz: 'Asia/Bangkok' },
+  { name: 'Phuket', country: 'Thailand', tz: 'Asia/Bangkok' },
+  { name: 'Da Nang', country: 'Vietnam', tz: 'Asia/Ho_Chi_Minh' },
+  { name: 'Ho Chi Minh City', country: 'Vietnam', tz: 'Asia/Ho_Chi_Minh' },
+  { name: 'Hanoi', country: 'Vietnam', tz: 'Asia/Bangkok' },
+  { name: 'Mandalay', country: 'Myanmar', tz: 'Asia/Yangon' },
+  { name: 'Kathmandu', country: 'Nepal', tz: 'Asia/Kathmandu' },
+  { name: 'Colombo', country: 'Sri Lanka', tz: 'Asia/Colombo' },
+  { name: 'Chennai', country: 'India', tz: 'Asia/Kolkata' },
+  { name: 'Bangalore', country: 'India', tz: 'Asia/Kolkata' },
+  { name: 'Hyderabad', country: 'India', tz: 'Asia/Kolkata' },
+  { name: 'Pune', country: 'India', tz: 'Asia/Kolkata' },
+  { name: 'Jaipur', country: 'India', tz: 'Asia/Kolkata' },
+  { name: 'Surat', country: 'India', tz: 'Asia/Kolkata' },
+  { name: 'Lahore', country: 'Pakistan', tz: 'Asia/Karachi' },
+  { name: 'Rawalpindi', country: 'Pakistan', tz: 'Asia/Karachi' },
+  { name: 'Almaty', country: 'Kazakhstan', tz: 'Asia/Almaty' },
+  { name: 'Tashkent', country: 'Uzbekistan', tz: 'Asia/Tashkent' },
+  { name: 'Baku', country: 'Azerbaijan', tz: 'Asia/Baku' },
+  { name: 'Tbilisi', country: 'Georgia', tz: 'Asia/Tbilisi' },
+  { name: 'Yerevan', country: 'Armenia', tz: 'Asia/Yerevan' },
+  { name: 'Abu Dhabi', country: 'UAE', tz: 'Asia/Dubai' },
+  { name: 'Sharjah', country: 'UAE', tz: 'Asia/Dubai' },
+  { name: 'Doha', country: 'Qatar', tz: 'Asia/Qatar' },
+  { name: 'Manama', country: 'Bahrain', tz: 'Asia/Bahrain' },
+  { name: 'Kuwait City', country: 'Kuwait', tz: 'Asia/Kuwait' },
+  { name: 'Muscat', country: 'Oman', tz: 'Asia/Muscat' },
+  { name: 'Amman', country: 'Jordan', tz: 'Asia/Amman' },
+  { name: 'Beirut', country: 'Lebanon', tz: 'Asia/Beirut' },
+  { name: 'Damascus', country: 'Syria', tz: 'Asia/Damascus' },
+  { name: 'Erbil', country: 'Iraq', tz: 'Asia/Baghdad' },
+  { name: 'Basra', country: 'Iraq', tz: 'Asia/Baghdad' },
+  { name: 'Shiraz', country: 'Iran', tz: 'Asia/Tehran' },
+  { name: 'Isfahan', country: 'Iran', tz: 'Asia/Tehran' },
+  { name: 'Mashhad', country: 'Iran', tz: 'Asia/Tehran' },
+  { name: 'Jeddah', country: 'Saudi Arabia', tz: 'Asia/Riyadh' },
+  { name: 'Mecca', country: 'Saudi Arabia', tz: 'Asia/Riyadh' },
+  { name: 'Medina', country: 'Saudi Arabia', tz: 'Asia/Riyadh' },
+  { name: 'Alexandria', country: 'Egypt', tz: 'Africa/Cairo' },
+  { name: 'Giza', country: 'Egypt', tz: 'Africa/Cairo' },
+  { name: 'Casablanca', country: 'Morocco', tz: 'Africa/Casablanca' },
+  { name: 'Marrakech', country: 'Morocco', tz: 'Africa/Casablanca' },
+  { name: 'Algiers', country: 'Algeria', tz: 'Africa/Algiers' },
+  { name: 'Tunis', country: 'Tunisia', tz: 'Africa/Tunis' },
+  { name: 'Dakar', country: 'Senegal', tz: 'Africa/Dakar' },
+  { name: 'Accra', country: 'Ghana', tz: 'Africa/Accra' },
+  { name: 'Abidjan', country: 'Ivory Coast', tz: 'Africa/Abidjan' },
+  { name: 'Addis Ababa', country: 'Ethiopia', tz: 'Africa/Addis_Ababa' },
+  { name: 'Dar es Salaam', country: 'Tanzania', tz: 'Africa/Dar_es_Salaam' },
+  { name: 'Kampala', country: 'Uganda', tz: 'Africa/Kampala' },
+  { name: 'Kigali', country: 'Rwanda', tz: 'Africa/Kigali' },
+  { name: 'Luanda', country: 'Angola', tz: 'Africa/Luanda' },
+  { name: 'Maputo', country: 'Mozambique', tz: 'Africa/Maputo' },
+  { name: 'Harare', country: 'Zimbabwe', tz: 'Africa/Harare' },
+  { name: 'Lusaka', country: 'Zambia', tz: 'Africa/Lusaka' },
+  { name: 'Gaborone', country: 'Botswana', tz: 'Africa/Gaborone' },
+  { name: 'Windhoek', country: 'Namibia', tz: 'Africa/Windhoek' },
+  { name: 'Pretoria', country: 'South Africa', tz: 'Africa/Johannesburg' },
+  { name: 'Cape Town', country: 'South Africa', tz: 'Africa/Johannesburg' },
+  { name: 'Durban', country: 'South Africa', tz: 'Africa/Johannesburg' },
+  { name: 'Melbourne', country: 'Australia', tz: 'Australia/Melbourne' },
+  { name: 'Brisbane', country: 'Australia', tz: 'Australia/Brisbane' },
+  { name: 'Perth', country: 'Australia', tz: 'Australia/Perth' },
+  { name: 'Adelaide', country: 'Australia', tz: 'Australia/Adelaide' },
+  { name: 'Hobart', country: 'Australia', tz: 'Australia/Hobart' },
+  { name: 'Wellington', country: 'New Zealand', tz: 'Pacific/Auckland' },
+  { name: 'Christchurch', country: 'New Zealand', tz: 'Pacific/Auckland' },
+  { name: 'Port Moresby', country: 'Papua New Guinea', tz: 'Pacific/Port_Moresby' },
+  { name: 'Suva', country: 'Fiji', tz: 'Pacific/Fiji' },
+  { name: 'Noumea', country: 'New Caledonia', tz: 'Pacific/Noumea' },
 ];
 
 const WorldClockView = ({ glassClass }: { glassClass: string }) => {
   const [now, setNow] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [displayedCities, setDisplayedCities] = useState(DEFAULT_CITIES);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const getCityTime = (tz: string) => {
@@ -415,6 +634,23 @@ const WorldClockView = ({ glassClass }: { glassClass: string }) => {
     return `${diffHours > 0 ? '+' : ''}${diffHours}h`;
   };
 
+  const suggestions = ALL_CITIES.filter(city => 
+    city.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    city.country.toLowerCase().includes(searchQuery.toLowerCase())
+  ).filter(city => !displayedCities.some(dc => dc.name === city.name));
+
+  const handleAddCity = (city: typeof ALL_CITIES[0]) => {
+    if (!displayedCities.some(c => c.name === city.name)) {
+      setDisplayedCities([city, ...displayedCities]);
+    }
+    setSearchQuery('');
+    setShowSuggestions(false);
+  };
+
+  const handleRemoveCity = (cityName: string) => {
+    setDisplayedCities(displayedCities.filter(c => c.name !== cityName));
+  };
+
   return (
     <div className={`rounded-3xl p-8 sm:p-12 flex flex-col relative min-h-[400px] ${glassClass}`}>
       <div className="absolute top-6 left-6 flex items-center gap-2 opacity-60">
@@ -422,17 +658,76 @@ const WorldClockView = ({ glassClass }: { glassClass: string }) => {
         <span className="font-medium tracking-widest uppercase text-sm">World Clock</span>
       </div>
       
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {CITIES.map(city => (
-          <div key={city.name} className="p-6 rounded-2xl bg-black/5 dark:bg-white/5 flex flex-col">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold">{city.name}</h3>
-              <span className="text-xs font-medium opacity-80 bg-black/10 dark:bg-white/10 px-2 py-1 rounded-lg">{getDiff(city.tz)}</span>
-            </div>
-            <div className="font-mono text-2xl font-bold tracking-tight mb-1">{getCityTime(city.tz)}</div>
-            <div className="text-sm opacity-70 font-medium">{getCityDate(city.tz)}</div>
+      <div className="mt-12 mb-8 max-w-md mx-auto w-full relative" ref={searchRef}>
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Search size={18} className="opacity-50" />
+        </div>
+        <input
+          type="text"
+          placeholder="Search to add a city..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          className="w-full pl-12 pr-4 py-3 rounded-xl outline-none transition-all font-medium bg-black/5 dark:bg-white/5 focus:bg-black/10 dark:focus:bg-white/10"
+          aria-label="Search to add a city"
+          aria-expanded={showSuggestions && searchQuery.length > 0}
+          aria-controls="city-suggestions"
+          role="combobox"
+        />
+        {showSuggestions && searchQuery && (
+          <div id="city-suggestions" role="listbox" className="absolute z-20 w-full mt-2 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto bg-white dark:bg-slate-800 border border-black/10 dark:border-white/10">
+            {suggestions.length > 0 ? (
+              suggestions.map(city => (
+                <button
+                  key={city.name}
+                  onClick={() => handleAddCity(city)}
+                  className="w-full text-left px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex justify-between items-center"
+                  role="option"
+                  aria-selected="false"
+                >
+                  <span className="font-bold">{city.name}</span>
+                  <span className="text-sm opacity-70">{city.country}</span>
+                </button>
+              ))
+            ) : (
+              <div className="px-4 py-3 opacity-50 text-center" role="option" aria-disabled="true">No cities found</div>
+            )}
           </div>
-        ))}
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {displayedCities.length > 0 ? (
+          displayedCities.map(city => (
+            <div key={city.name} className="p-6 rounded-2xl bg-black/5 dark:bg-white/5 flex flex-col group relative">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-bold">{city.name}</h3>
+                  <span className="text-sm opacity-70">{city.country}</span>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <button 
+                    onClick={() => handleRemoveCity(city.name)} 
+                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 p-1 rounded-full hover:bg-red-500/10"
+                    aria-label={`Remove ${city.name}`}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </button>
+                  <span className="text-xs font-medium opacity-80 bg-black/10 dark:bg-white/10 px-2 py-1 rounded-lg">{getDiff(city.tz)}</span>
+                </div>
+              </div>
+              <div className="font-mono text-2xl font-bold tracking-tight mb-1">{getCityTime(city.tz)}</div>
+              <div className="text-sm opacity-70 font-medium">{getCityDate(city.tz)}</div>
+            </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-12 opacity-50">
+            No cities displayed. Search to add one!
+          </div>
+        )}
       </div>
     </div>
   );
@@ -443,8 +738,9 @@ export default function App() {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [newAlarmTime, setNewAlarmTime] = useState('07:00');
   const [newAlarmLabel, setNewAlarmLabel] = useState('Wake up');
+  const [newAlarmRepeat, setNewAlarmRepeat] = useState(false);
   const [theme, setTheme] = useState<'auto' | 'dark' | 'light' | 'pure-black' | 'ps3-classic' | 'ps3-aurora' | 'ps3-crimson'>('auto');
-  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'contact' | null>(null);
+  const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'contact' | 'clear-alarms' | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState(1.0);
   const [soundType, setSoundType] = useState('acoustic_guitar');
@@ -470,6 +766,9 @@ export default function App() {
   }, []);
 
   const stopAlarm = () => {
+    if (ringingAlarm && !ringingAlarm.repeat) {
+      setAlarms(prev => prev.map(a => a.id === ringingAlarm.id ? { ...a, enabled: false } : a));
+    }
     setRingingAlarm(null);
     if (ringIntervalRef.current) clearInterval(ringIntervalRef.current);
     if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
@@ -481,6 +780,25 @@ export default function App() {
       audioPlayerRef.current.pause();
       audioPlayerRef.current.currentTime = 0;
     }
+  };
+
+  const snoozeAlarm = () => {
+    if (!ringingAlarm) return;
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 5);
+    const snoozeTime = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    
+    const snoozedAlarm: Alarm = {
+      id: Date.now().toString(),
+      time: snoozeTime,
+      label: `Snoozed: ${ringingAlarm.label || 'Alarm'}`,
+      enabled: true,
+      repeat: false
+    };
+    
+    setAlarms(prev => [...prev, snoozedAlarm].sort((a, b) => a.time.localeCompare(b.time)));
+    stopAlarm();
   };
 
   // Load settings on mount
@@ -641,10 +959,12 @@ export default function App() {
       id: Date.now().toString(),
       time: newAlarmTime,
       label: newAlarmLabel,
-      enabled: true
+      enabled: true,
+      repeat: newAlarmRepeat
     };
     setAlarms([...alarms, newAlarm].sort((a, b) => a.time.localeCompare(b.time)));
     setNewAlarmLabel('');
+    setNewAlarmRepeat(false);
   };
 
   const toggleAlarm = (id: string) => {
@@ -734,35 +1054,31 @@ export default function App() {
     }
   };
 
+  const stopPreview = () => {
+    if (customAudioRef.current) {
+      customAudioRef.current.pause();
+      customAudioRef.current.currentTime = 0;
+    }
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current.currentTime = 0;
+    }
+  };
+
   const previewSound = (type: string, vol: number) => {
+    stopPreview();
     if (type === 'custom') {
       if (customAudioRef.current) {
         customAudioRef.current.volume = Math.min(vol, 1.0);
-        customAudioRef.current.currentTime = 0;
         customAudioRef.current.play().catch(e => console.error(e));
-        setTimeout(() => {
-          if (customAudioRef.current) {
-            customAudioRef.current.pause();
-            customAudioRef.current.currentTime = 0;
-          }
-        }, 3000);
       }
     } else {
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-      }
       const soundUrl = ALARM_SOUNDS[type]?.url;
       if (soundUrl) {
         const audio = new Audio(soundUrl);
         audio.volume = Math.min(vol, 1.0);
         audio.play().catch(e => console.error(e));
         audioPlayerRef.current = audio;
-        
-        setTimeout(() => {
-          if (audioPlayerRef.current === audio) {
-            audio.pause();
-          }
-        }, 3000);
       }
     }
   };
@@ -802,27 +1118,55 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-1000 flex flex-col p-4 sm:p-8 ${getBackgroundClass()}`}>
+    <main className={`min-h-screen transition-colors duration-1000 flex flex-col p-4 sm:p-8 ${getBackgroundClass()}`}>
       <div className="w-full max-w-5xl mx-auto flex flex-col flex-1">
         
         {/* Top Navigation Bar */}
-        <div className={`rounded-2xl p-2 mb-6 flex flex-wrap gap-2 justify-center ${glassClass}`}>
-          <button onClick={() => setActiveTab('alarm')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'alarm' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
-            <Bell size={18} /> Alarm Clock
+        <div className={`rounded-2xl p-2 mb-6 flex flex-wrap gap-2 justify-center ${glassClass}`} role="tablist" aria-label="Main Navigation">
+          <button 
+            role="tab"
+            aria-selected={activeTab === 'alarm'}
+            aria-controls="panel-alarm"
+            id="tab-alarm"
+            onClick={() => setActiveTab('alarm')} 
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'alarm' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}
+          >
+            <Bell size={18} aria-hidden="true" /> Alarm Clock
           </button>
-          <button onClick={() => setActiveTab('timer')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'timer' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
-            <Hourglass size={18} /> Timer
+          <button 
+            role="tab"
+            aria-selected={activeTab === 'timer'}
+            aria-controls="panel-timer"
+            id="tab-timer"
+            onClick={() => setActiveTab('timer')} 
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'timer' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}
+          >
+            <Hourglass size={18} aria-hidden="true" /> Timer
           </button>
-          <button onClick={() => setActiveTab('stopwatch')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'stopwatch' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
-            <Timer size={18} /> Stopwatch
+          <button 
+            role="tab"
+            aria-selected={activeTab === 'stopwatch'}
+            aria-controls="panel-stopwatch"
+            id="tab-stopwatch"
+            onClick={() => setActiveTab('stopwatch')} 
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'stopwatch' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}
+          >
+            <Timer size={18} aria-hidden="true" /> Stopwatch
           </button>
-          <button onClick={() => setActiveTab('worldclock')} className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'worldclock' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}>
-            <Globe size={18} /> World Clock
+          <button 
+            role="tab"
+            aria-selected={activeTab === 'worldclock'}
+            aria-controls="panel-worldclock"
+            id="tab-worldclock"
+            onClick={() => setActiveTab('worldclock')} 
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors ${activeTab === 'worldclock' ? 'bg-indigo-500 text-white' : 'hover:bg-black/10 dark:hover:bg-white/10'}`}
+          >
+            <Globe size={18} aria-hidden="true" /> World Clock
           </button>
         </div>
 
         {activeTab === 'alarm' && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4 sm:mt-8">
+        <div id="panel-alarm" role="tabpanel" aria-labelledby="tab-alarm" className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4 sm:mt-8">
           
           {/* Left Column */}
           <div className="md:col-span-8 flex flex-col gap-6">
@@ -837,12 +1181,20 @@ export default function App() {
               <p className="text-2xl font-medium opacity-90 mb-12">
                 {ringingAlarm.label || "Alarm"}
               </p>
-              <button 
-                onClick={stopAlarm}
-                className="btn-tactile py-4 px-12 rounded-2xl font-bold text-xl bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/30 w-full max-w-md"
-              >
-                STOP ALARM
-              </button>
+              <div className="flex flex-col gap-4 w-full max-w-md">
+                <button 
+                  onClick={snoozeAlarm}
+                  className="btn-tactile py-4 px-12 rounded-2xl font-bold text-xl bg-white/10 hover:bg-white/20 text-white w-full"
+                >
+                  SNOOZE (5M)
+                </button>
+                <button 
+                  onClick={stopAlarm}
+                  className="btn-tactile py-4 px-12 rounded-2xl font-bold text-xl bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/30 w-full"
+                >
+                  STOP ALARM
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -920,39 +1272,88 @@ export default function App() {
                   onClick={() => setSoundEnabled(!soundEnabled)}
                   className={`p-2 rounded-xl transition-colors ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
                   aria-label="Toggle Sound"
+                  role="switch"
+                  aria-checked={soundEnabled}
                 >
-                  {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                  {soundEnabled ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
                 </button>
               </div>
             </div>
             
             {soundEnabled && (
               <div className="flex flex-col gap-3 mt-2 border-t border-black/5 dark:border-white/10 pt-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium opacity-80">Alarm Sound</label>
-                  <select 
-                    value={soundType} 
-                    onChange={e => {
-                      setSoundType(e.target.value);
-                      previewSound(e.target.value, volume);
-                    }}
-                    className={`text-sm p-1.5 rounded-lg outline-none font-medium cursor-pointer max-w-[150px] truncate ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 text-white [&>option]:bg-slate-900' : 'bg-black/5 text-slate-900 [&>option]:bg-white'}`}
-                  >
-                    <option value="acoustic_guitar">Acoustic Guitar</option>
-                    <option value="action_trailer">Action Trailer</option>
-                    <option value="celestial">Celestial</option>
-                    <option value="chiptune">Chiptune</option>
-                    <option value="ethereal_breeze">Ethereal Breeze</option>
-                    <option value="funk_beat">Funk Beat</option>
-                    <option value="hip_hop">Hip Hop</option>
-                    <option value="le_meilleur">Le Meilleur</option>
-                    <option value="morning_sun">Morning Sun</option>
-                    <option value="ringphone">Ringphone</option>
-                    <option value="slow_ambient">Slow Ambient</option>
-                    <option value="soft_morning">Soft Morning</option>
-                    <option value="tropical">Tropical</option>
-                    <option value="custom">Custom Upload...</option>
-                  </select>
+                  <div className={`flex flex-col gap-1 mt-1 max-h-[160px] overflow-y-auto pr-2 rounded-lg ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'scrollbar-dark' : 'scrollbar-light'}`}>
+                    {Object.entries(ALARM_SOUNDS).map(([key, sound]) => (
+                      <div key={key} className={`flex items-center justify-between p-2 rounded-lg transition-colors ${soundType === key ? (activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-500/10 text-indigo-700') : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer flex-1">
+                          <input 
+                            type="radio" 
+                            name="soundType" 
+                            value={key} 
+                            checked={soundType === key} 
+                            onChange={() => {
+                              setSoundType(key);
+                              previewSound(key, volume);
+                            }} 
+                            className="sr-only" 
+                            aria-label={sound.name}
+                          />
+                          <span className="text-sm font-medium">{sound.name}</span>
+                        </label>
+                        <div className="flex items-center gap-1">
+                          <button 
+                            onClick={() => previewSound(key, volume)} 
+                            className="p-1.5 rounded-md hover:bg-black/10 dark:hover:bg-white/10"
+                            aria-label={`Play ${sound.name}`}
+                          >
+                            <Play size={14} />
+                          </button>
+                          <button 
+                            onClick={stopPreview} 
+                            className="p-1.5 rounded-md hover:bg-black/10 dark:hover:bg-white/10"
+                            aria-label={`Stop ${sound.name}`}
+                          >
+                            <Square size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${soundType === 'custom' ? (activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-500/10 text-indigo-700') : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                      <label className="flex items-center gap-2 cursor-pointer flex-1">
+                        <input 
+                          type="radio" 
+                          name="soundType" 
+                          value="custom" 
+                          checked={soundType === 'custom'} 
+                          onChange={() => {
+                            setSoundType('custom');
+                            previewSound('custom', volume);
+                          }} 
+                          className="sr-only" 
+                          aria-label="Custom Upload"
+                        />
+                        <span className="text-sm font-medium">Custom Upload...</span>
+                      </label>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => previewSound('custom', volume)} 
+                          className="p-1.5 rounded-md hover:bg-black/10 dark:hover:bg-white/10"
+                          aria-label="Play Custom Sound"
+                        >
+                          <Play size={14} />
+                        </button>
+                        <button 
+                          onClick={stopPreview} 
+                          className="p-1.5 rounded-md hover:bg-black/10 dark:hover:bg-white/10"
+                          aria-label="Stop Custom Sound"
+                        >
+                          <Square size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 {soundType === 'custom' && (
@@ -966,8 +1367,9 @@ export default function App() {
                       <input 
                         type="file" 
                         accept="audio/*" 
-                        className="hidden" 
+                        className="sr-only" 
                         onChange={handleCustomAudioUpload}
+                        aria-label="Upload custom audio file"
                       />
                     </label>
                   </div>
@@ -985,6 +1387,7 @@ export default function App() {
                     onMouseUp={() => previewSound(soundType, volume)}
                     onTouchEnd={() => previewSound(soundType, volume)}
                     className="flex-1 h-2 bg-black/10 dark:bg-white/20 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    aria-label="Volume"
                   />
                 </div>
               </div>
@@ -1003,13 +1406,15 @@ export default function App() {
                   value={currentHourStr} 
                   onChange={(v) => handleTimeChange('hour', v)} 
                   width="w-16"
+                  label="Hour"
                 />
-                <span className="text-2xl font-bold opacity-50 mb-1">:</span>
+                <span className="text-2xl font-bold opacity-50 mb-1" aria-hidden="true">:</span>
                 <ScrollPicker 
                   items={minutesList} 
                   value={currentMinuteStr} 
                   onChange={(v) => handleTimeChange('minute', v)} 
                   width="w-16"
+                  label="Minute"
                 />
                 <div className="w-2" />
                 <ScrollPicker 
@@ -1017,20 +1422,43 @@ export default function App() {
                   value={currentAmPmStr} 
                   onChange={(v) => handleTimeChange('ampm', v)} 
                   width="w-16"
+                  label="AM/PM"
                 />
               </div>
-              <input 
-                type="text" 
-                placeholder="Alarm label (e.g. Wake up)" 
-                value={newAlarmLabel}
-                onChange={(e) => setNewAlarmLabel(e.target.value)}
-                className={`w-full p-3 rounded-xl outline-none transition-all font-medium ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 focus:bg-white/20 placeholder-white/30' : 'bg-white/50 focus:bg-white/80 placeholder-black/30'}`}
-              />
+              <div className="relative mb-2 mt-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none opacity-50">
+                  <Tag size={18} />
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Alarm label (e.g. Wake up)" 
+                  value={newAlarmLabel}
+                  onChange={(e) => setNewAlarmLabel(e.target.value)}
+                  className={`w-full pl-10 p-3 rounded-xl outline-none transition-all font-medium ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 focus:bg-white/20 placeholder-white/30' : 'bg-white/50 focus:bg-white/80 placeholder-black/30'}`}
+                  aria-label="Alarm label"
+                />
+              </div>
+              <label className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                <div className={`w-10 h-5 shrink-0 rounded-full relative transition-colors ${newAlarmRepeat ? (activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500' : 'bg-slate-800') : 'bg-gray-400/30'}`}>
+                  <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${newAlarmRepeat ? 'left-6' : 'left-1'}`} />
+                </div>
+                <input 
+                  type="checkbox" 
+                  className="sr-only" 
+                  checked={newAlarmRepeat} 
+                  onChange={(e) => setNewAlarmRepeat(e.target.checked)} 
+                  aria-label="Repeat Daily"
+                />
+                <span className="font-medium flex items-center gap-2">
+                  <RotateCcw size={16} className="opacity-70" />
+                  Repeat Daily
+                </span>
+              </label>
               <button 
                 type="submit"
                 className={`btn-tactile mt-2 py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500 text-white' : 'bg-slate-900 text-white'}`}
               >
-                <Plus size={20} /> Set Alarm
+                <Plus size={20} aria-hidden="true" /> Set Alarm
               </button>
             </form>
           </div>
@@ -1038,8 +1466,18 @@ export default function App() {
           {/* Card 3: The List (Active Alarms) */}
           <div className={`rounded-3xl p-6 flex-1 flex flex-col min-h-[250px] max-h-[400px] ${glassClass}`}>
             <h2 className="font-display text-xl font-semibold mb-4 flex items-center justify-between">
-              <span>Active Alarms</span>
-              <span className="text-sm font-normal opacity-60 bg-black/10 dark:bg-white/10 px-2 py-1 rounded-full">{alarms.length}</span>
+              <div className="flex items-center gap-2">
+                <span>Active Alarms</span>
+                <span className="text-sm font-normal opacity-60 bg-black/10 dark:bg-white/10 px-2 py-1 rounded-full">{alarms.length}</span>
+              </div>
+              {alarms.length > 0 && (
+                <button 
+                  onClick={() => setActiveModal('clear-alarms')}
+                  className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors px-2 py-1 rounded hover:bg-red-500/10"
+                >
+                  Clear All
+                </button>
+              )}
             </h2>
             
             <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-3">
@@ -1058,21 +1496,27 @@ export default function App() {
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <button 
                         onClick={() => toggleAlarm(alarm.id)}
+                        role="switch"
+                        aria-checked={alarm.enabled}
+                        aria-label={`Toggle alarm for ${alarm.time}`}
                         className={`w-12 h-6 shrink-0 rounded-full relative transition-colors ${alarm.enabled ? (activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500' : 'bg-slate-800') : 'bg-gray-400/30'}`}
                       >
-                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${alarm.enabled ? 'left-7' : 'left-1'}`} />
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${alarm.enabled ? 'left-7' : 'left-1'}`} aria-hidden="true" />
                       </button>
                       <div className="min-w-0 flex-1">
-                        <div className="font-mono text-xl font-bold tracking-tight truncate">{alarm.time}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-mono text-xl font-bold tracking-tight truncate">{alarm.time}</div>
+                          {alarm.repeat && <RotateCcw size={14} className="opacity-50" aria-label="Repeats daily" title="Repeats daily" />}
+                        </div>
                         {alarm.label && <div className="text-sm opacity-70 font-medium truncate">{alarm.label}</div>}
                       </div>
                     </div>
                     <button 
                       onClick={() => deleteAlarm(alarm.id)}
-                      className="p-2 shrink-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 hover:text-red-500"
+                      className="p-2 shrink-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 hover:text-red-500 focus:opacity-100"
                       aria-label="Delete Alarm"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={18} aria-hidden="true" />
                     </button>
                   </div>
                 ))
@@ -1085,22 +1529,28 @@ export default function App() {
         )}
 
         {activeTab === 'timer' && (
-          <TimerView 
-            glassClass={glassClass} 
-            soundEnabled={soundEnabled} 
-            soundType={soundType} 
-            volume={volume} 
-            customAudioRef={customAudioRef} 
-            audioPlayerRef={audioPlayerRef} 
-          />
+          <div id="panel-timer" role="tabpanel" aria-labelledby="tab-timer">
+            <TimerView 
+              glassClass={glassClass} 
+              soundEnabled={soundEnabled} 
+              soundType={soundType} 
+              volume={volume} 
+              customAudioRef={customAudioRef} 
+              audioPlayerRef={audioPlayerRef} 
+            />
+          </div>
         )}
 
         {activeTab === 'stopwatch' && (
-          <StopwatchView glassClass={glassClass} />
+          <div id="panel-stopwatch" role="tabpanel" aria-labelledby="tab-stopwatch">
+            <StopwatchView glassClass={glassClass} />
+          </div>
         )}
 
         {activeTab === 'worldclock' && (
-          <WorldClockView glassClass={glassClass} />
+          <div id="panel-worldclock" role="tabpanel" aria-labelledby="tab-worldclock">
+            <WorldClockView glassClass={glassClass} />
+          </div>
         )}
         
         {/* Content Sections */}
@@ -1177,18 +1627,21 @@ export default function App() {
             <div 
               className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-3xl p-8 shadow-2xl ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
             >
               <button 
                 onClick={() => setActiveModal(null)}
                 className="absolute top-6 right-6 p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                 aria-label="Close modal"
               >
-                <X size={24} />
+                <X size={24} aria-hidden="true" />
               </button>
               
               {activeModal === 'privacy' && (
                 <div className="space-y-6">
-                  <h2 className="font-display text-3xl font-bold mb-2">Privacy Policy</h2>
+                  <h2 id="modal-title" className="font-display text-3xl font-bold mb-2">Privacy Policy</h2>
                   <p className="opacity-70 text-sm mb-6">Last Updated: March 2026</p>
                   
                   <h3 className="text-xl font-bold">1. Introduction</h3>
@@ -1213,7 +1666,7 @@ export default function App() {
 
               {activeModal === 'terms' && (
                 <div className="space-y-6">
-                  <h2 className="font-display text-3xl font-bold mb-2">Terms of Service</h2>
+                  <h2 id="modal-title" className="font-display text-3xl font-bold mb-2">Terms of Service</h2>
                   <p className="opacity-70 text-sm mb-6">Last Updated: March 2026</p>
                   
                   <h3 className="text-xl font-bold">1. Acceptance of Terms</h3>
@@ -1238,7 +1691,7 @@ export default function App() {
 
               {activeModal === 'contact' && (
                 <div className="space-y-6">
-                  <h2 className="font-display text-3xl font-bold mb-2">Contact Us</h2>
+                  <h2 id="modal-title" className="font-display text-3xl font-bold mb-2">Contact Us</h2>
                   <p className="opacity-90 text-lg">We would love to hear from you! Whether you have a feature request, a bug report, or just want to share how Chrono Bento has helped your productivity, please reach out.</p>
                   
                   <div className="bg-black/5 dark:bg-white/5 p-6 rounded-2xl mt-8">
@@ -1246,10 +1699,38 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {activeModal === 'clear-alarms' && (
+                <div className="space-y-6 text-center">
+                  <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trash2 size={32} aria-hidden="true" />
+                  </div>
+                  <h2 id="modal-title" className="font-display text-3xl font-bold mb-2">Clear All Alarms?</h2>
+                  <p className="opacity-90 text-lg mb-8">Are you sure you want to remove all active alarms? This action cannot be undone.</p>
+                  
+                  <div className="flex gap-4 justify-center mt-8">
+                    <button 
+                      onClick={() => setActiveModal(null)}
+                      className="px-6 py-3 rounded-xl font-medium bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors flex-1"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setAlarms([]);
+                        setActiveModal(null);
+                      }}
+                      className="px-6 py-3 rounded-xl font-medium bg-red-500 hover:bg-red-600 text-white transition-colors flex-1"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
