@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload, X, Play, Square, RotateCcw, Flag, Hourglass, Timer, Globe, Search, Tag } from 'lucide-react';
+import { Bell, Plus, Trash2, Moon, Sun, Volume2, VolumeX, Clock, Monitor, Upload, X, Play, Square, RotateCcw, Flag, Hourglass, Timer, Globe, Search, Tag, ChevronDown } from 'lucide-react';
 
 type Alarm = {
   id: string;
@@ -740,6 +740,7 @@ export default function App() {
   const [newAlarmLabel, setNewAlarmLabel] = useState('Wake up');
   const [newAlarmRepeat, setNewAlarmRepeat] = useState(false);
   const [theme, setTheme] = useState<'auto' | 'dark' | 'light' | 'pure-black' | 'ps3-classic' | 'ps3-aurora' | 'ps3-crimson'>('auto');
+  const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const [activeModal, setActiveModal] = useState<'privacy' | 'terms' | 'contact' | 'clear-alarms' | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [volume, setVolume] = useState(1.0);
@@ -984,9 +985,9 @@ export default function App() {
     { id: 'light', name: 'Light', icon: <Sun size={14} />, swatch: 'bg-slate-100 border border-slate-300' },
     { id: 'dark', name: 'Dark', icon: <Moon size={14} />, swatch: 'bg-slate-900 border border-slate-700' },
     { id: 'pure-black', name: 'Pure Black', icon: <Moon size={14} className="fill-current" />, swatch: 'bg-black border border-gray-800' },
-    { id: 'ps3-classic', name: 'PS3 Classic', icon: <Monitor size={14} />, swatch: 'ps3-bg-classic' },
-    { id: 'ps3-aurora', name: 'PS3 Aurora', icon: <Monitor size={14} />, swatch: 'ps3-bg-aurora' },
-    { id: 'ps3-crimson', name: 'PS3 Crimson', icon: <Monitor size={14} />, swatch: 'ps3-bg-crimson' },
+    { id: 'ps3-classic', name: 'Classic', icon: <Monitor size={14} />, swatch: 'ps3-bg-classic' },
+    { id: 'ps3-aurora', name: 'Aurora', icon: <Monitor size={14} />, swatch: 'ps3-bg-aurora' },
+    { id: 'ps3-crimson', name: 'Crimson', icon: <Monitor size={14} />, swatch: 'ps3-bg-crimson' },
   ];
 
   const getNextAlarmTime = () => {
@@ -1277,24 +1278,57 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 mt-2 border-t border-black/5 dark:border-white/10 pt-4">
+            <div className="flex flex-col gap-3 mt-2 border-t border-black/5 dark:border-white/10 pt-4 relative">
               <label className="text-sm font-medium opacity-80" id="theme-group-label">Theme</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-labelledby="theme-group-label">
-                {THEMES.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTheme(t.id as any)}
-                    className={`flex items-center gap-2 p-2 rounded-xl transition-colors text-left ${theme === t.id ? (activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-500/10 text-indigo-700') : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
-                    aria-label={`Select ${t.name} theme`}
-                    role="radio"
-                    aria-checked={theme === t.id}
-                  >
-                    <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center ${t.swatch} ${t.id === 'light' ? 'text-slate-700' : 'text-white'}`}>
-                      {t.icon}
+              <div className="relative">
+                <button
+                  onClick={() => setShowThemeDropdown(!showThemeDropdown)}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
+                  aria-haspopup="listbox"
+                  aria-expanded={showThemeDropdown}
+                  aria-labelledby="theme-group-label"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center ${(THEMES.find(t => t.id === theme) || THEMES[0]).swatch} ${(THEMES.find(t => t.id === theme) || THEMES[0]).id === 'light' ? 'text-slate-700' : 'text-white'}`}>
+                      {(THEMES.find(t => t.id === theme) || THEMES[0]).icon}
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-wider truncate">{t.name}</span>
-                  </button>
-                ))}
+                    <span className="font-medium">{(THEMES.find(t => t.id === theme) || THEMES[0]).name}</span>
+                  </div>
+                  <ChevronDown size={18} className={`transition-transform ${showThemeDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showThemeDropdown && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowThemeDropdown(false)}
+                      aria-hidden="true"
+                    />
+                    <div 
+                      className={`absolute top-full left-0 right-0 mt-2 z-20 rounded-xl shadow-xl overflow-y-auto max-h-60 border ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-slate-800 border-white/10 scrollbar-dark' : 'bg-white border-black/10 scrollbar-light'}`}
+                      role="listbox"
+                      aria-labelledby="theme-group-label"
+                    >
+                      {THEMES.map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            setTheme(t.id as any);
+                            setShowThemeDropdown(false);
+                          }}
+                          className={`w-full flex items-center gap-3 p-3 transition-colors text-left ${theme === t.id ? (activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-500/10 text-indigo-700') : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                          role="option"
+                          aria-selected={theme === t.id}
+                        >
+                          <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center ${t.swatch} ${t.id === 'light' ? 'text-slate-700' : 'text-white'}`}>
+                            {t.icon}
+                          </div>
+                          <span className="font-medium">{t.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             
