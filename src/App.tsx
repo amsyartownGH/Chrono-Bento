@@ -760,8 +760,12 @@ export default function App() {
     try {
       const adsbygoogle = (window as any).adsbygoogle || [];
       adsbygoogle.push({});
-    } catch (e) {
-      console.error("AdSense error", e);
+    } catch (e: any) {
+      if (e.message && e.message.includes('already have ads')) {
+        // Ignore expected error during React Strict Mode or re-renders
+      } else {
+        console.error("AdSense error", e);
+      }
     }
   }, []);
 
@@ -975,10 +979,15 @@ export default function App() {
     setAlarms(alarms.filter(a => a.id !== id));
   };
 
-  const cycleTheme = () => {
-    const themes: ('auto' | 'light' | 'dark' | 'pure-black' | 'ps3-classic' | 'ps3-aurora' | 'ps3-crimson')[] = ['auto', 'light', 'dark', 'pure-black', 'ps3-classic', 'ps3-aurora', 'ps3-crimson'];
-    setTheme(themes[(themes.indexOf(theme) + 1) % themes.length]);
-  };
+  const THEMES = [
+    { id: 'auto', name: 'Auto', icon: <Monitor size={14} />, swatch: 'bg-gradient-to-br from-slate-200 to-slate-800' },
+    { id: 'light', name: 'Light', icon: <Sun size={14} />, swatch: 'bg-slate-100 border border-slate-300' },
+    { id: 'dark', name: 'Dark', icon: <Moon size={14} />, swatch: 'bg-slate-900 border border-slate-700' },
+    { id: 'pure-black', name: 'Pure Black', icon: <Moon size={14} className="fill-current" />, swatch: 'bg-black border border-gray-800' },
+    { id: 'ps3-classic', name: 'PS3 Classic', icon: <Monitor size={14} />, swatch: 'ps3-bg-classic' },
+    { id: 'ps3-aurora', name: 'PS3 Aurora', icon: <Monitor size={14} />, swatch: 'ps3-bg-aurora' },
+    { id: 'ps3-crimson', name: 'PS3 Crimson', icon: <Monitor size={14} />, swatch: 'ps3-bg-crimson' },
+  ];
 
   const getNextAlarmTime = () => {
     const enabledAlarms = alarms.filter(a => a.enabled);
@@ -1257,18 +1266,6 @@ export default function App() {
                   {use24HourFormat ? '24H' : '12H'}
                 </button>
                 <button 
-                  onClick={cycleTheme}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
-                  aria-label="Toggle Theme"
-                >
-                  {theme === 'auto' && <Monitor size={14} />}
-                  {theme === 'light' && <Sun size={14} />}
-                  {theme === 'dark' && <Moon size={14} />}
-                  {theme === 'pure-black' && <Moon size={14} className="fill-current" />}
-                  {theme.startsWith('ps3') && <Monitor size={14} />}
-                  {theme.replace('ps3-', '').replace('-', ' ')}
-                </button>
-                <button 
                   onClick={() => setSoundEnabled(!soundEnabled)}
                   className={`p-2 rounded-xl transition-colors ${activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`}
                   aria-label="Toggle Sound"
@@ -1277,6 +1274,27 @@ export default function App() {
                 >
                   {soundEnabled ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
                 </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 mt-2 border-t border-black/5 dark:border-white/10 pt-4">
+              <label className="text-sm font-medium opacity-80" id="theme-group-label">Theme</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="radiogroup" aria-labelledby="theme-group-label">
+                {THEMES.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTheme(t.id as any)}
+                    className={`flex items-center gap-2 p-2 rounded-xl transition-colors text-left ${theme === t.id ? (activeTheme === 'dark' || activeTheme === 'pure-black' || activeTheme.startsWith('ps3') ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-500/10 text-indigo-700') : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                    aria-label={`Select ${t.name} theme`}
+                    role="radio"
+                    aria-checked={theme === t.id}
+                  >
+                    <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center ${t.swatch} ${t.id === 'light' ? 'text-slate-700' : 'text-white'}`}>
+                      {t.icon}
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider truncate">{t.name}</span>
+                  </button>
+                ))}
               </div>
             </div>
             
